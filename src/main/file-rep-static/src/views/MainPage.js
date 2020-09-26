@@ -18,11 +18,12 @@ import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import Tree from "../components/Tree";
-import DocumentViewDialog from "../components/DocumentViewDialog";
+import DocumentDialog from "../components/DocumentDialog";
 import PublishIcon from '@material-ui/icons/Publish';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import FolderDialog from "../components/FolderDialog";
+import {getSectionsReq, getSectionTreeReq, createFolder} from "../api/api";
 
 const styles = theme=>({
 
@@ -79,25 +80,175 @@ const styles = theme=>({
     }
 });
 
+const renderSections =(sections)=>{
+    return sections.map(section=><MenuItem key={section.id} value={section.id}>{section.title}</MenuItem>)
+}
+
 class MainPage extends React.Component{
     constructor(props) {
         super(props);
-        this.state={
+        this.state= {
             viewDocumentIsOpen: false,
-            folderDialogIsOpen: true,
-
+            folderDialogIsOpen: false,
+            sections: [],
+            selectedSection: 0,
+            sectionTree: null,
+            selectedIndex: null,
+            selectedType: "folder",
+            selectedFolderName: null,
+            folderObject:null,
         }
+
+
+    }
+
+    updateData(){
+        this.getSections();
+    }
+
+    getSections=()=>{
+        getSectionsReq()
+            .then(sections=>{
+                this.setState({sections: sections, selectedSection: sections[0].id}, this.getSectionTree)
+            })
+    }
+
+    getSectionTree=()=>{
+        const {selectedSection} = this.state;
+        getSectionTreeReq(selectedSection).then(result => this.setState({sectionTree: result}));
+    }
+
+    componentDidMount() {
+        this.updateData();
+    }
+
+    onTreeElementSelect = (element) =>{
+        const index = element.id === "root" ? element.id : element.id.split("_")[1];
+        console.log("index = " + index);
+        console.log("type = " + element.type);
+        console.log("name = " + element.name);
+        this.setState({
+            selectedIndex: index,
+            selectedType: element.type,
+            selectedFolderName: element.name
+        })
+    }
+
+    openCreateFolderDialog= ()=>{
+        this.setState({
+            folderObject:null,
+            folderDialogIsOpen: true
+        })
+    }
+
+    onSaveFolder = (folder) => {
+        const {selectedIndex, selectedSection} = this.state;
+
+        folder.folderId = selectedIndex === "root" ? null : selectedIndex;
+        folder.sectionId = selectedSection;
+
+        createFolder(folder)
+            .then(()=>this.getSectionTree())
+    }
+
+    renderSelectedElementMenu(){
+        const {selectedIndex, selectedType} = this.state;
+        const {classes} = this.props;
+
+        const renderedList = [];
+
+        if(selectedIndex === null){
+            return renderedList;
+        }
+
+        if(selectedType === "document"){
+            renderedList.push(<IconButton
+                key={"downloadBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="primary"
+            >
+                <CloudDownloadIcon  fontSize="large"/>
+            </IconButton>)
+            renderedList.push(<IconButton
+                key={"uploadBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="primary"
+            >
+                <PublishIcon fontSize="large" style={{color: '#388e3c'}}/>
+            </IconButton>)
+        }else{
+            renderedList.push(<IconButton
+                key={"newFolderBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="inherit"
+                onClick={this.openCreateFolderDialog}
+            >
+                <CreateNewFolder fontSize="large" />
+            </IconButton>)
+            renderedList.push(<IconButton
+                key={"newDocumentBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="inherit"
+            >
+                <AddToPhotos fontSize="large" />
+            </IconButton>)
+        }
+
+        if(selectedIndex !== "root"){
+            renderedList.unshift(<IconButton
+                key={"viewBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="inherit"
+                fontSize='large'
+            >
+                <Visibility fontSize="large"/>
+            </IconButton>)
+            renderedList.push(<IconButton
+                key={"deleteBtn"}
+                className={classes.iconButton}
+                edge="end"
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="secondary"
+            >
+                <Delete fontSize="large" />
+            </IconButton>)
+        }
+
+        return renderedList;
     }
 
 
-
     render (){
-        const {viewDocumentIsOpen, folderDialogIsOpen} = this.state;
+        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, folderObject, selectedFolderName} = this.state;
         const {classes} = this.props;
 
+        console.log(selectedSection);
+
         return <div className={classes.root}>
-            <DocumentViewDialog isOpen={viewDocumentIsOpen}/>
-            <FolderDialog isOpen={folderDialogIsOpen}/>
+            <DocumentDialog isOpen={viewDocumentIsOpen}/>
+            <FolderDialog
+                isOpen={folderDialogIsOpen}
+                onClose={()=>this.setState({folderDialogIsOpen: false})}
+                folderObject={folderObject}
+                parentFolder={selectedFolderName}
+                onSave={this.onSaveFolder}
+            />
             <AppBar position="static" className={classes.appBar}>
                 <Toolbar>
 
@@ -160,84 +311,22 @@ class MainPage extends React.Component{
                 </Typography>
                 <Select
                     className={classes.sectionSelector}
-                    value={10}
-                    onChange={console.log}
+                    value={selectedSection}
+                    onChange={event=>this.setState({selectedSection: event.target.value})}
                     displayEmpty
                     inputProps={{ 'aria-label': 'Without label' }}
                 >
-                    <MenuItem value="">
-                        <em>None</em>
-                    </MenuItem>
-                    <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem>
-                    <MenuItem value={35}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem>
-                    <MenuItem value={36}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem>
+                    {renderSections(sections)}
                 </Select>
-                <IconButton
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="inherit"
-                    fontSize='large'
-                >
-                    <Visibility fontSize="large"/>
-                </IconButton>
-                <IconButton
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="primary"
-                >
-                    <CloudDownloadIcon  fontSize="large"/>
-                </IconButton>
-                <IconButton
 
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="primary"
-                >
-                    <PublishIcon fontSize="large" style={{color: '#388e3c'}}/>
-                </IconButton>
-                <IconButton
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="inherit"
-                >
-                    <CreateNewFolder fontSize="large" />
-                </IconButton>
-                <IconButton
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="inherit"
-                >
-                    <AddToPhotos fontSize="large" />
-                </IconButton>
-                <IconButton
-                    className={classes.iconButton}
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    color="secondary"
-                >
-                    <Delete fontSize="large" />
-                </IconButton>
+
+                {this.renderSelectedElementMenu()}
+
+
 
                 <br/>
 
-                <Tree/>
+                <Tree tree={sectionTree} onSelect={this.onTreeElementSelect}/>
 
             </Container>
         </div>

@@ -23,6 +23,11 @@ public class Section {
     @JoinColumn(name = "section_id")
     private List<Folder> folders;
 
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "section_id")
+    private List<Document> documents;
+
     public Section() {
     }
 
@@ -52,6 +57,14 @@ public class Section {
 
     public void setFolders(List<Folder> folders) {
         this.folders = folders;
+    }
+
+    public List<Document> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<Document> documents) {
+        this.documents = documents;
     }
 
     public void add(Folder folder){

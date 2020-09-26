@@ -16,9 +16,29 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function FolderDialog({isOpen}) {
+export default function FolderDialog({isOpen, onSave, onClose, folderObject, selectedFolderName}) {
+
+    const [title, setTitle] = React.useState("");
+    const [note, setNote] = React.useState("");
 
     const classes = useStyles();
+
+
+    const prepareSave = ()=>{
+        if(folderObject === null){
+            onSave({
+                id:0,
+                title: title,
+                note: note,
+            })
+        }else{
+            folderObject.title = title;
+            folderObject.note = note;
+            onSave(folderObject)
+        }
+    }
+
+
 
     return (
         <div>
@@ -26,25 +46,34 @@ export default function FolderDialog({isOpen}) {
             <Dialog open={isOpen} onClose={console.log} aria-labelledby="form-dialog-title" maxWidth="sm" fullWidth={true}>
                 <DialogTitle id="form-dialog-title">Создание новой папки</DialogTitle>
                 <DialogContent>
-                    <TextField className={classes.dialogElements} required id="standard-required" label="Наименование" defaultValue="Спецификации важные" fullWidth/><br/>
+                    <TextField
+                        className={classes.dialogElements}
+                        required
+                        id="standard-required"
+                        label="Наименование"
+                        defaultValue={title}
+                        fullWidth
+                        onChange={event=>setTitle(event.target.value)}
+                    />
+                        <br/>
                     <TextField
                         className={classes.dialogElements}
                         id="standard-multiline-flexible"
                         label="Описание"
                         multiline
                         rowsMax={4}
-                        value={"Это документ очень важный, прям супер-пупер, ляляляя. Вот так вот. Это документ очень важный, прям супер-пупер, ляляляя. Вот так вот."}
-                        onChange={console.log}
+                        value={note}
+                        onChange={event=>setNote(event.target.value)}
                         fullWidth
                     />
                     <br/>
-                    <TextField disabled={true} className={classes.dialogElements} label="Родительская папка" defaultValue="Спецификации" fullWidth/><br/>
+                    <TextField disabled={true} className={classes.dialogElements} label="Родительская папка" defaultValue={selectedFolderName} fullWidth/><br/>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={console.log} color="secondary">
+                    <Button onClick={onClose} color="secondary">
                         Отмена
                     </Button>
-                    <Button onClick={console.log} color="primary">
+                    <Button onClick={prepareSave} color="primary">
                         Сохранить
                     </Button>
                 </DialogActions>

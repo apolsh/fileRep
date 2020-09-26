@@ -31,18 +31,47 @@ const useStyles = makeStyles((theme)=>({
 
 }));
 
-export default function Tree() {
+export default function Tree({tree, onSelect}) {
     const classes = useStyles();
     const [expanded, setExpanded] = React.useState([]);
     const [selected, setSelected] = React.useState([]);
 
-    const handleToggle = (event, nodeIds) => {
-        setExpanded(nodeIds);
+    const handleSelect = (event, nodeId) => {
+        if(selected === nodeId){
+            const expandedCopy = [...expanded];
+            const index = expanded.indexOf(nodeId)
+            if(index !== -1){
+                expandedCopy.splice(index, 1);
+            }else{
+                expandedCopy.push(nodeId);
+            }
+            setExpanded(expandedCopy);
+        }else{
+            setSelected(nodeId);
+        }
     };
 
-    const handleSelect = (event, nodeIds) => {
-        setSelected(nodeIds);
-    };
+    const renderTreeElement = element =>{
+        return (
+            <TreeItem key={element.id}
+                      nodeId={element.id}
+                      label={<div className={classes.labelRoot}>
+                                {element.type === "folder" ? <Folder color="inherit" className={classes.labelIcon} />
+                                : <InsertDriveFile color="inherit" className={classes.labelIcon} />}
+                                <Typography variant="body1" className={classes.labelText}>
+                                    {element.name}
+                                </Typography>
+                            </div>}
+                      onClick={()=> {
+                          if(element.id !== selected) onSelect(element);
+                      }}
+            >
+                {element.children ? element.children.map(treeElement=>renderTreeElement(treeElement)):null}
+            </TreeItem>
+        );
+
+    }
+
 
     return (
         <TreeView
@@ -51,54 +80,54 @@ export default function Tree() {
             defaultExpandIcon={<ChevronRightIcon />}
             expanded={expanded}
             selected={selected}
-            onNodeToggle={handleToggle}
             onNodeSelect={handleSelect}
         >
-            <TreeItem nodeId="1" label={
-                <div className={classes.labelRoot}>
-                    <Folder color="inherit" className={classes.labelIcon} />
-                    <Typography variant="body1" className={classes.labelText}>
-                        Application
-                    </Typography>
-                </div>
+            {tree ? renderTreeElement(tree) : null}
+            {/*<TreeItem nodeId="1" label={*/}
+            {/*    <div className={classes.labelRoot}>*/}
+            {/*        <Folder color="inherit" className={classes.labelIcon} />*/}
+            {/*        <Typography variant="body1" className={classes.labelText}>*/}
+            {/*            Application*/}
+            {/*        </Typography>*/}
+            {/*    </div>*/}
 
-            }>
-                <TreeItem nodeId="2" label={
-                    <div className={classes.labelRoot}>
-                        <InsertDriveFile color="inherit" className={classes.labelIcon} />
-                        <Typography variant="body1" className={classes.labelText}>
-                            Firefox
-                        </Typography>
-                    </div>
+            {/*}>*/}
+            {/*    <TreeItem nodeId="2" label={*/}
+            {/*        <div className={classes.labelRoot}>*/}
+            {/*            <InsertDriveFile color="inherit" className={classes.labelIcon} />*/}
+            {/*            <Typography variant="body1" className={classes.labelText}>*/}
+            {/*                Firefox*/}
+            {/*            </Typography>*/}
+            {/*        </div>*/}
 
-                }/>
-                <TreeItem nodeId="3" label={
-                    <div className={classes.labelRoot}>
-                        <InsertDriveFile color="inherit" className={classes.labelIcon} />
-                        <Typography variant="body1" className={classes.labelText}>
-                            Chrome
-                        </Typography>
-                    </div>
+            {/*    }/>*/}
+            {/*    <TreeItem nodeId="3" label={*/}
+            {/*        <div className={classes.labelRoot}>*/}
+            {/*            <InsertDriveFile color="inherit" className={classes.labelIcon} />*/}
+            {/*            <Typography variant="body1" className={classes.labelText}>*/}
+            {/*                Chrome*/}
+            {/*            </Typography>*/}
+            {/*        </div>*/}
 
-                }/>
-                <TreeItem nodeId="4" label={
-                    <div className={classes.labelRoot}>
-                        <InsertDriveFile color="inherit" className={classes.labelIcon} />
-                        <Typography variant="body1" className={classes.labelText}>
-                            Webstorm
-                        </Typography>
-                    </div>
+            {/*    }/>*/}
+            {/*    <TreeItem nodeId="4" label={*/}
+            {/*        <div className={classes.labelRoot}>*/}
+            {/*            <InsertDriveFile color="inherit" className={classes.labelIcon} />*/}
+            {/*            <Typography variant="body1" className={classes.labelText}>*/}
+            {/*                Webstorm*/}
+            {/*            </Typography>*/}
+            {/*        </div>*/}
 
-                }/>
-            </TreeItem>
-            <TreeItem nodeId="5" label="Documents">
-                <TreeItem nodeId="6" label="Material-UI">
-                    <TreeItem nodeId="7" label="src">
-                        <TreeItem nodeId="8" label="index.js" />
-                        <TreeItem nodeId="9" label="tree-view.js" />
-                    </TreeItem>
-                </TreeItem>
-            </TreeItem>
+            {/*    }/>*/}
+            {/*</TreeItem>*/}
+            {/*<TreeItem nodeId="5" label="Documents">*/}
+            {/*    <TreeItem nodeId="6" label="Material-UI">*/}
+            {/*        <TreeItem nodeId="7" label="src">*/}
+            {/*            <TreeItem nodeId="8" label="index.js" />*/}
+            {/*            <TreeItem nodeId="9" label="tree-view.js" />*/}
+            {/*        </TreeItem>*/}
+            {/*    </TreeItem>*/}
+            {/*</TreeItem>*/}
         </TreeView>
     );
 }

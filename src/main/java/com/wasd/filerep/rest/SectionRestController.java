@@ -3,13 +3,16 @@ package com.wasd.filerep.rest;
 import com.wasd.filerep.entity.Folder;
 import com.wasd.filerep.entity.Section;
 import com.wasd.filerep.service.SectionService;
+import com.wasd.filerep.wrappers.rest.TreeItemWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class SectionRestController {
 
     private SectionService sectionService;
@@ -34,13 +37,18 @@ public class SectionRestController {
         return section;
     }
 
-    @GetMapping("/sections/{section_id}/folders")
-    public List<Folder> getSessionFolders(@PathVariable int section_id){
+    @GetMapping("/sections/{section_id}/tree")
+    public TreeItemWrapper getSessionFolders(@PathVariable int section_id){
         Section section = sectionService.findById(section_id);
+
         if(section == null){
             throw new RuntimeException("section not found " + section_id);
         }
-        return section.getFolders();
+        TreeItemWrapper treeItemWrapper = new TreeItemWrapper("root", "Корневая директория");
+        List<Folder> filtered = section.getFolders().stream().filter(folder -> folder.getFolderId() == null).collect(Collectors.toList());
+        treeItemWrapper.addChildrenFolders(filtered);
+        treeItemWrapper.addChildrenDocumentsRoot(section.getDocuments());
+        return treeItemWrapper;
     }
 
     @PostMapping("/sections")

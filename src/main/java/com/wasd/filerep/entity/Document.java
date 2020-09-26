@@ -16,13 +16,29 @@ public class Document {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "actual_ver_id")
-    private String actualVersion;
+    @ManyToOne()
+    @JoinColumn(name = "actual_ver_id")
+    private DocumentVersion actualVersion;
+
+    @Column(name = "folder_id")
+    private Integer folderId;
+
+    @Column(name = "section_id")
+    private int sectionId;
 
     @JsonIgnore
     @OneToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "doc_id")
     private List<DocumentVersion> versions;
+
+    @ManyToMany
+    @JoinTable(
+            name = "document_tags",
+            joinColumns = @JoinColumn(name = "doc_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<Tag> tags;
+
 
     public long getId() {
         return id;
@@ -40,12 +56,28 @@ public class Document {
         this.title = title;
     }
 
-    public String getActualVersion() {
+    public DocumentVersion getActualVersion() {
         return actualVersion;
     }
 
-    public void setActualVersion(String actualVersion) {
+    public void setActualVersion(DocumentVersion actualVersion) {
         this.actualVersion = actualVersion;
+    }
+
+    public Integer getFolderId() {
+        return folderId;
+    }
+
+    public void setFolderId(Integer folderId) {
+        this.folderId = folderId;
+    }
+
+    public int getSectionId() {
+        return sectionId;
+    }
+
+    public void setSectionId(int sectionId) {
+        this.sectionId = sectionId;
     }
 
     public List<DocumentVersion> getVersions() {
@@ -54,6 +86,14 @@ public class Document {
 
     public void setVersions(List<DocumentVersion> versions) {
         this.versions = versions;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
     }
 
     @Override

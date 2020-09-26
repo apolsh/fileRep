@@ -1,5 +1,6 @@
 package com.wasd.filerep.dao;
 
+import com.wasd.filerep.entity.Document;
 import com.wasd.filerep.entity.Folder;
 import com.wasd.filerep.entity.Section;
 import org.hibernate.Session;
@@ -56,4 +57,5 @@ public class SectionDAOImpl implements SectionDAO {
         q.setParameter("sectionId", index);
         q.executeUpdate();
     }
+
 }
