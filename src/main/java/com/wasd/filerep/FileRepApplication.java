@@ -1,0 +1,13 @@
+package com.wasd.filerep;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class FileRepApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(FileRepApplication.class, args);
+    }
+
+}
