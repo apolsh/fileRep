@@ -13,6 +13,8 @@ public interface FolderDAO {
 
     public void save(Folder folder);
 
+    public void update(Folder folder);
+
     public void deleteById(int index);
 
 }

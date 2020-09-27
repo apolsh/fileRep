@@ -23,7 +23,7 @@ import PublishIcon from '@material-ui/icons/Publish';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import FolderDialog from "../components/FolderDialog";
-import {getSectionsReq, getSectionTreeReq, createFolder} from "../api/api";
+import {getSectionsReq, getSectionTreeReq, createFolder, getFolderByIdReq, updateFolderReq} from "../api/api";
 
 const styles = theme=>({
 
@@ -96,9 +96,13 @@ class MainPage extends React.Component{
             selectedIndex: null,
             selectedType: "folder",
             selectedFolderName: null,
-            folderObject:null,
+            selectedFolder:null,
+            selectedDocument: null,
+
         }
 
+        this.selectedFolder = null;
+        this.selectedDocument = null;
 
     }
 
@@ -130,25 +134,81 @@ class MainPage extends React.Component{
         this.setState({
             selectedIndex: index,
             selectedType: element.type,
-            selectedFolderName: element.name
+            selectedFolderName: element.name,
         })
+        this.selectedElement = element;
     }
 
     openCreateFolderDialog= ()=>{
         this.setState({
-            folderObject:null,
+            selectedDocument:null,
             folderDialogIsOpen: true
         })
     }
 
-    onSaveFolder = (folder) => {
+    openCreateDocumentDialog = () => {
+        this.setState({
+            selectedFolder:null,
+            viewDocumentIsOpen: true
+        })
+    }
+
+    onSaveDocument = (document)=>{
+
+    }
+
+    onViewClick = () => {
+
+        const {selectedType, selectedIndex} = this.state;
+
+        if(selectedType === "folder"){
+            getFolderByIdReq(selectedIndex).then(folder=> {
+                if(folder.folderId){
+                    getFolderByIdReq(folder.folderId)
+                        .then(parent=>{
+                            this.setState({
+                                folderDialogIsOpen: true,
+                                selectedFolder: folder,
+                                selectedFolderName: parent.title
+                            })
+                        })
+                }else{
+                    this.setState({
+                        folderDialogIsOpen: true,
+                        selectedFolder: folder,
+                        selectedFolderName: "Корневая директория"
+                    })
+                }
+            });
+        }
+    }
+
+    onSaveFolder = (folder, createNew) => {
         const {selectedIndex, selectedSection} = this.state;
 
-        folder.folderId = selectedIndex === "root" ? null : selectedIndex;
-        folder.sectionId = selectedSection;
+        if(createNew){
+            folder.folderId = selectedIndex === "root" ? null : selectedIndex;
+            folder.sectionId = selectedSection;
 
-        createFolder(folder)
-            .then(()=>this.getSectionTree())
+
+            createFolder(folder)
+                .then(()=> {
+                    this.getSectionTree()
+                    this.setState({
+                        folderDialogIsOpen: false
+                    })
+                })
+        }else{
+            updateFolderReq(folder)
+                .then(()=> {
+                    this.getSectionTree();
+                    this.setState({
+                        folderDialogIsOpen: false
+                    });
+                })
+        }
+
+
     }
 
     renderSelectedElementMenu(){
@@ -201,6 +261,7 @@ class MainPage extends React.Component{
                 aria-label="account of current user"
                 aria-haspopup="true"
                 color="inherit"
+                onClick={this.openCreateDocumentDialog}
             >
                 <AddToPhotos fontSize="large" />
             </IconButton>)
@@ -215,6 +276,7 @@ class MainPage extends React.Component{
                 aria-haspopup="true"
                 color="inherit"
                 fontSize='large'
+                onClick={this.onViewClick}
             >
                 <Visibility fontSize="large"/>
             </IconButton>)
@@ -235,17 +297,23 @@ class MainPage extends React.Component{
 
 
     render (){
-        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, folderObject, selectedFolderName} = this.state;
+        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, selectedFolderName, selectedFolder, selectedDocument} = this.state;
         const {classes} = this.props;
 
         console.log(selectedSection);
 
         return <div className={classes.root}>
-            <DocumentDialog isOpen={viewDocumentIsOpen}/>
+            <DocumentDialog
+                isOpen={viewDocumentIsOpen}
+                onClose={()=>this.setState({viewDocumentIsOpen: false})}
+                parentFolder={selectedFolderName}
+                documentObject={selectedDocument}
+                onSave={this.onSaveDocument}
+            />
             <FolderDialog
                 isOpen={folderDialogIsOpen}
                 onClose={()=>this.setState({folderDialogIsOpen: false})}
-                folderObject={folderObject}
+                folderObject={selectedFolder}
                 parentFolder={selectedFolderName}
                 onSave={this.onSaveFolder}
             />

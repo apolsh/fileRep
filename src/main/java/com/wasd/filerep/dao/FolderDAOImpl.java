@@ -3,11 +3,13 @@ package com.wasd.filerep.dao;
 import com.wasd.filerep.entity.Folder;
 import com.wasd.filerep.entity.Section;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -37,13 +39,28 @@ public class FolderDAOImpl implements FolderDAO {
     @Override
     public void save(Folder folder) {
         Session session = entityManager.unwrap(Session.class);
-        if(folder.getId() != 0 && folder.getDocuments() == null){
-            Section existingFolder = session.get(Section.class, folder.getId());
-            existingFolder.setTitle(folder.getTitle());
-            session.saveOrUpdate(existingFolder);
-        }else{
-            session.saveOrUpdate(folder);
-        }
+        Transaction txn = session.beginTransaction();
+        session.saveOrUpdate(folder);
+        txn.commit();
+    }
+
+    public void update(Folder folder){
+
+        Session session = entityManager.unwrap(Session.class);
+        Transaction txn = session.beginTransaction();
+        session.update(folder);
+
+//        Query q = session.createQuery("update Folder set title = :title" +
+//                ", sectionId = :sectionId, folderId = :folderId, note = :note"+
+//                " where id = :update_id");
+//        q.setParameter("title", folder.getTitle());
+//        q.setParameter("sectionId", folder.getSectionId());
+//        q.setParameter("folderId", folder.getFolderId());
+//        q.setParameter("note", folder.getNote());
+//        q.setParameter("update_id", folder.getId());
+//        int result = q.executeUpdate();
+        txn.commit();
+        //System.out.println("================result:" + result);
     }
 
     @Override

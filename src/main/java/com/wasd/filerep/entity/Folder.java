@@ -26,10 +26,12 @@ public class Folder {
     private String note;
 
 
+    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "folder_id")
     private List<Document> documents;
 
+    @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "folder_id")
     private List<Folder> folders;

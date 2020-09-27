@@ -33,6 +33,11 @@ public class FolderServiceImpl implements FolderService {
     }
 
     @Override
+    public void update(Folder folder) {
+        folderDAO.update(folder);
+    }
+
+    @Override
     public void deleteById(int index) {
         folderDAO.deleteById(index);
     }

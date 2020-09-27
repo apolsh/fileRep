@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,7 +16,8 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export default function FolderDialog({isOpen, onSave, onClose, folderObject, selectedFolderName}) {
+export default function FolderDialog({isOpen, onSave, onClose, folderObject, parentFolder}) {
+
 
     const [title, setTitle] = React.useState("");
     const [note, setNote] = React.useState("");
@@ -30,14 +31,28 @@ export default function FolderDialog({isOpen, onSave, onClose, folderObject, sel
                 id:0,
                 title: title,
                 note: note,
-            })
+            }, true)
         }else{
             folderObject.title = title;
             folderObject.note = note;
-            onSave(folderObject)
+            onSave(folderObject, false)
         }
     }
 
+    const fillTitle = ()=>{
+        const title = folderObject && folderObject.title ? folderObject.title : "";
+        return title;
+    }
+
+    const fillNote = ()=>{
+        const note = folderObject && folderObject.note ? folderObject.note : "";
+        return note;
+    }
+
+    useEffect(() => {
+        setTitle(fillTitle());
+        setNote(fillNote());
+    }, [isOpen]);
 
 
     return (
@@ -67,7 +82,7 @@ export default function FolderDialog({isOpen, onSave, onClose, folderObject, sel
                         fullWidth
                     />
                     <br/>
-                    <TextField disabled={true} className={classes.dialogElements} label="Родительская папка" defaultValue={selectedFolderName} fullWidth/><br/>
+                    <TextField disabled={true} className={classes.dialogElements} label="Родительская папка" defaultValue={parentFolder} fullWidth/><br/>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} color="secondary">

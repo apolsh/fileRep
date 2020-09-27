@@ -11,5 +11,7 @@ public interface FolderService {
 
     public void save(Folder section);
 
+    public void update(Folder folder);
+
     public void deleteById(int index);
 }
