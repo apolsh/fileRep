@@ -23,6 +23,9 @@ public class DocumentVersion {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "user_id")
+    private int userId;
+
     @ManyToOne()
     @JoinColumn(name = "doc_id")
     private Document document;
@@ -36,6 +39,9 @@ public class DocumentVersion {
 
     @Column(name = "extension")
     private String extension;
+
+    @Column(name = "doc_id")
+    private long docId;
 
     public long getId() {
         return id;
@@ -89,7 +95,6 @@ public class DocumentVersion {
         return document;
     }
 
-
     public void setDocument(Document documentId) {
         this.document = documentId;
     }
@@ -108,6 +113,22 @@ public class DocumentVersion {
 
     public void setExtension(String extension) {
         this.extension = extension;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public long getDocId() {
+        return docId;
+    }
+
+    public void setDocId(long docId) {
+        this.docId = docId;
     }
 
     @Override

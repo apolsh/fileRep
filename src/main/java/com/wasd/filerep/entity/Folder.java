@@ -19,8 +19,8 @@ public class Folder {
     @Column(name="section_id")
     private Integer sectionId;
 
-    @Column(name="folder_id")
-    private Integer folderId;
+    @Column(name= "parent_id")
+    private Integer parentId;
 
     @Column(name="note")
     private String note;
@@ -33,7 +33,7 @@ public class Folder {
 
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "folder_id")
+    @JoinColumn(name = "parent_id")
     private List<Folder> folders;
 
     public Folder() {
@@ -63,12 +63,12 @@ public class Folder {
         this.sectionId = sectionId;
     }
 
-    public Integer getFolderId() {
-        return folderId;
+    public Integer getParentId() {
+        return parentId;
     }
 
-    public void setFolderId(Integer folderId) {
-        this.folderId = folderId;
+    public void setParentId(Integer folderId) {
+        this.parentId = folderId;
     }
 
     public String getNote() {

@@ -45,7 +45,7 @@ public class SectionRestController {
             throw new RuntimeException("section not found " + section_id);
         }
         TreeItemWrapper treeItemWrapper = new TreeItemWrapper("root", "Корневая директория");
-        List<Folder> filtered = section.getFolders().stream().filter(folder -> folder.getFolderId() == null).collect(Collectors.toList());
+        List<Folder> filtered = section.getFolders().stream().filter(folder -> folder.getParentId() == null).collect(Collectors.toList());
         treeItemWrapper.addChildrenFolders(filtered);
         treeItemWrapper.addChildrenDocumentsRoot(section.getDocuments());
         return treeItemWrapper;

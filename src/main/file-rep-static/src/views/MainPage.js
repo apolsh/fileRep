@@ -24,6 +24,7 @@ import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import FolderDialog from "../components/FolderDialog";
 import {getSectionsReq, getSectionTreeReq, createFolder, getFolderByIdReq, updateFolderReq} from "../api/api";
+import AddVersionDialog from "../components/AddVersionDialog";
 
 const styles = theme=>({
 
@@ -88,6 +89,7 @@ class MainPage extends React.Component{
     constructor(props) {
         super(props);
         this.state= {
+            addVersionDialogIsOpen: false,
             viewDocumentIsOpen: false,
             folderDialogIsOpen: false,
             sections: [],
@@ -153,8 +155,22 @@ class MainPage extends React.Component{
         })
     }
 
-    onSaveDocument = (document)=>{
+    openAddVersionDialog = () => {
+        this.setState({
+            addVersionDialogIsOpen: true
+        })
+    }
 
+    onSaveDocument = (document)=>{
+        console.log(document)
+    }
+
+    onSaveVersion = (version) => {
+        const {selectedIndex} = this.state;
+
+        version.id = 1;
+        version.docId = selectedIndex;
+        console.log(version)
     }
 
     onViewClick = () => {
@@ -163,8 +179,8 @@ class MainPage extends React.Component{
 
         if(selectedType === "folder"){
             getFolderByIdReq(selectedIndex).then(folder=> {
-                if(folder.folderId){
-                    getFolderByIdReq(folder.folderId)
+                if(folder.parentId){
+                    getFolderByIdReq(folder.parentId)
                         .then(parent=>{
                             this.setState({
                                 folderDialogIsOpen: true,
@@ -187,7 +203,7 @@ class MainPage extends React.Component{
         const {selectedIndex, selectedSection} = this.state;
 
         if(createNew){
-            folder.folderId = selectedIndex === "root" ? null : selectedIndex;
+            folder.parentId = selectedIndex === "root" ? null : selectedIndex;
             folder.sectionId = selectedSection;
 
 
@@ -239,6 +255,7 @@ class MainPage extends React.Component{
                 aria-label="account of current user"
                 aria-haspopup="true"
                 color="primary"
+                onClick={this.openAddVersionDialog}
             >
                 <PublishIcon fontSize="large" style={{color: '#388e3c'}}/>
             </IconButton>)
@@ -297,12 +314,18 @@ class MainPage extends React.Component{
 
 
     render (){
-        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, selectedFolderName, selectedFolder, selectedDocument} = this.state;
+        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, selectedFolderName, selectedFolder, selectedDocument, addVersionDialogIsOpen} = this.state;
         const {classes} = this.props;
 
         console.log(selectedSection);
 
         return <div className={classes.root}>
+            <AddVersionDialog
+                isOpen={addVersionDialogIsOpen}
+                onClose={()=>this.setState({addVersionDialogIsOpen: false})}
+                documentTitle={selectedFolderName}
+                onSave={this.onSaveVersion}
+            />
             <DocumentDialog
                 isOpen={viewDocumentIsOpen}
                 onClose={()=>this.setState({viewDocumentIsOpen: false})}
