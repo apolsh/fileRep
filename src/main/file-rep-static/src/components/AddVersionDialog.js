@@ -26,24 +26,19 @@ export default function AddVersionDialog({isOpen, onSave, onClose, documentTitle
     const classes = useStyles();
 
     const prepareSave = () => {
-        /*
-        lastModified: 1590311814000
-        name: "abstrakciya-2560x1440-abstrakciya-20843.jpg"
-        size: 262176
-        type: "image/jpeg"
-        webkitRelativePath: ""
-         */
-        let extension = file.name.split('.').length > 0 ? file.name.split('.').pop() : '';
+        let extension = file.name.split('.').length > 1 ? file.name.split('.').pop() : '';
         onSave({
             title: title,
             note: note,
             uploadDate: new Date(),
             mimeType: file.type,
             size: file.size,
-            extension: extension
-        })
+            extension: extension,
+            file: file
+        }, file)
 
     }
+
 
     return (
         <div>

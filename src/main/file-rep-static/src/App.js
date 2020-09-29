@@ -1,5 +1,6 @@
 import React from "react";
 import MainPage from "./views/MainPage"
+import LoginPage from "./views/LoginPage";
 
 class App extends React.Component{
     constructor(props) {
@@ -10,6 +11,7 @@ class App extends React.Component{
     render() {
         return(
             <div>
+                {/*<LoginPage/>*/}
                 <MainPage/>
             </div>
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Dialog from '@material-ui/core/Dialog';
@@ -70,13 +70,14 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function DocumentDialog({isOpen, onClose, parentFolder, documentObject, onSave}) {
+export default function DocumentDialog({isOpen, onClose, parentFolder, documentObject, onSave, downloadActualVersion, uploadNewVersion}) {
 
     const classes = useStyles();
 
     const [tabIndex, setTabindex] = React.useState(0);
     const [title, setTitle] = React.useState("");
     const [note, setNote] = React.useState("");
+    const [tags, setTags] = React.useState([]);
     const [tagInput, setTagInput] = React.useState("");
     const [tagInputIsOpen, setTagInputIsOpen] = React.useState(false);
 
@@ -84,8 +85,34 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
         setTabindex(newValue);
     };
 
+
+    useEffect(() => {
+        if(documentObject){
+            setTitle(documentObject.title)
+            setNote(documentObject.note)
+            setTags(documentObject.tags)
+        }
+
+    }, [isOpen]);
+
+    const addTag = newTag => {
+        const tempTags = [...tags];
+        tempTags.push(newTag)
+        setTags(tempTags);
+    }
+
+    const removeTag = tagId => {
+        const tempTags = [...tags];
+        let newTags = tempTags.filter(tag=> tag.id !== tagId);
+        setTags(newTags);
+    }
+
+    const renderTags = ()=>{
+        return tags.map(tag=><Chip key={tag.id} label={tag.title} onDelete={()=>removeTag(tag.id)} color="default" />)
+    }
+
     return (
-            <Dialog open={isOpen} onClose={console.log} aria-labelledby="form-dialog-title">
+            <Dialog open={isOpen} onClose={onClose} aria-labelledby="form-dialog-title">
                 <AppBar position="static" color="default">
                     <Tabs
                         value={tabIndex}
@@ -169,9 +196,10 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                             }
 
                             <div className={classes.tags}>
-                                <Chip label="Спецификация" onDelete={console.log} color="default" />
-                                <Chip label="Релиз 3.18.50" onDelete={console.log} color="default" />
-                                <Chip label="Хорошие документы" onDelete={console.log} color="default" />
+                                {renderTags()}
+                                {/*<Chip label="Спецификация" onDelete={console.log} color="default" />*/}
+                                {/*<Chip label="Релиз_3.18.50" onDelete={console.log} color="default" />*/}
+                                {/*<Chip label="Хорошие_документы" onDelete={console.log} color="default" />*/}
                             </div>
                         </div>
 
@@ -182,6 +210,7 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                                 color="primary"
                                 style={{marginTop:20}}
                                 startIcon={<CloudDownloadIcon />}
+                                onClick={()=>downloadActualVersion()}
                             >
                                 Скачать актуальную версию
                             </Button>
@@ -191,6 +220,7 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                                 color="primary"
                                 style={{marginLeft:10, marginTop:20, backgroundColor:'#388e3c', color: 'white'}}
                                 startIcon={<PublishIcon />}
+                                onClick={()=>uploadNewVersion()}
                             >
                                 Загрузить новую версию
                             </Button>

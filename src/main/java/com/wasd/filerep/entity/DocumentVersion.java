@@ -1,5 +1,7 @@
 package com.wasd.filerep.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -23,13 +25,15 @@ public class DocumentVersion {
     @Column(name = "note")
     private String note;
 
-    @Column(name = "user_id")
-    private int userId;
+//    @Column(name = "user_id")
+//    private int userId;
 
+    @JsonIgnore
     @ManyToOne()
     @JoinColumn(name = "doc_id")
     private Document document;
 
+    @JsonIgnore
     @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;
@@ -40,8 +44,11 @@ public class DocumentVersion {
     @Column(name = "extension")
     private String extension;
 
-    @Column(name = "doc_id")
-    private long docId;
+    @Column(name = "title")
+    private String title;
+
+//    @Column(name = "doc_id")
+//    private long docId;
 
     public long getId() {
         return id;
@@ -114,21 +121,43 @@ public class DocumentVersion {
     public void setExtension(String extension) {
         this.extension = extension;
     }
+//
+//    public int getUserId() {
+//        return userId;
+//    }
+//
+//    public void setUserId(int userId) {
+//        this.userId = userId;
+//    }
+//
+//    public long getDocId() {
+//        return docId;
+//    }
+//
+//    public void setDocId(long docId) {
+//        this.docId = docId;
+//    }
 
-    public int getUserId() {
-        return userId;
+
+    public String getTitle() {
+        return title;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public long getDocId() {
-        return docId;
+    public DocumentVersion(String title, String mimeType, long size, Date uploadDate, String note, String storageId, String extension) {
+        this.title = title;
+        this.mimeType = mimeType;
+        this.size = size;
+        this.uploadDate = uploadDate;
+        this.note = note;
+        this.storageId = storageId;
+        this.extension = extension;
     }
 
-    public void setDocId(long docId) {
-        this.docId = docId;
+    public DocumentVersion() {
     }
 
     @Override

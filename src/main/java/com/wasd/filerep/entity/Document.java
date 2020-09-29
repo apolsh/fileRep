@@ -16,6 +16,9 @@ public class Document {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "note")
+    private String note;
+
     @ManyToOne()
     @JoinColumn(name = "actual_ver_id")
     private DocumentVersion actualVersion;
@@ -94,6 +97,14 @@ public class Document {
 
     public void setTags(List<Tag> tags) {
         this.tags = tags;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     @Override

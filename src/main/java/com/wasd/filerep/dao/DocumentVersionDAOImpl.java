@@ -4,6 +4,7 @@ import com.wasd.filerep.entity.DocumentVersion;
 import com.wasd.filerep.entity.Folder;
 import com.wasd.filerep.entity.Section;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -37,6 +38,7 @@ public class DocumentVersionDAOImpl implements DocumentVersionDAO {
     @Override
     public void save(DocumentVersion documentVersion) {
         Session session = entityManager.unwrap(Session.class);
+        Transaction txn = session.beginTransaction();
 //        Query<DocumentVersion> q = session.createQuery("from DocumentVersion where id=:index", DocumentVersion.class);
 //        q.setParameter("index", "a1");
 //
@@ -46,6 +48,7 @@ public class DocumentVersionDAOImpl implements DocumentVersionDAO {
         documentVersion.setId(0);
 
         session.saveOrUpdate(documentVersion);
+        txn.commit();
     }
 
     @Override

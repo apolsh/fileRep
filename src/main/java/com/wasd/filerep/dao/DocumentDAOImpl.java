@@ -3,6 +3,7 @@ package com.wasd.filerep.dao;
 import com.wasd.filerep.entity.Document;
 import com.wasd.filerep.entity.Section;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -37,14 +38,19 @@ public class DocumentDAOImpl implements DocumentDAO {
     @Override
     public void save(Document document) {
         Session session = entityManager.unwrap(Session.class);
-        if(document.getId() != 0 && document.getVersions() == null){
-            Document existingDocument = session.get(Document.class, document.getId());
-            existingDocument.setTitle(document.getTitle());
-            existingDocument.setActualVersion(document.getActualVersion());
-            session.saveOrUpdate(existingDocument);
-        }else{
-            session.saveOrUpdate(document);
-        }
+        Transaction txn = session.beginTransaction();
+        session.saveOrUpdate(document);
+        txn.commit();
+
+
+//        if(document.getId() != 0 && document.getVersions() == null){
+//            Document existingDocument = session.get(Document.class, document.getId());
+//            existingDocument.setTitle(document.getTitle());
+//            existingDocument.setActualVersion(document.getActualVersion());
+//            session.saveOrUpdate(existingDocument);
+//        }else{
+//            session.saveOrUpdate(document);
+//        }
     }
 
     @Override

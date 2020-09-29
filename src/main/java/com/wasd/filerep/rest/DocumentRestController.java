@@ -103,26 +103,23 @@ public class DocumentRestController {
     @PostMapping(path ="/{document_id}/version",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public String addVersion(@PathVariable Document document_id,
-                             @RequestParam("file")MultipartFile file,
-                             @RequestParam("filename") String filename,
-                             @RequestParam("note")String note,
-                             @RequestParam("mimeType") String mimeType
+    public String addVersion(@RequestParam("file")MultipartFile file,
+                             @RequestParam("title") String title,
+                             @RequestParam("note") String note,
+                             @RequestParam("uploadDate") Date uploadDate,
+                             @RequestParam("mimeType") String mimeType,
+                             @RequestParam("size") Long size,
+                             @RequestParam("extension") String extension,
+                             @RequestParam("docId") Long docId,
+                             @RequestParam("userId") Integer userId
     ){
-        String ext = FilenameUtils.getExtension(filename);
+        DocumentVersion documentVersion = new DocumentVersion(title, mimeType, size, uploadDate, note, null, extension);
 
-        DocumentVersion documentVersion = new DocumentVersion();
-        documentVersion.setMimeType(mimeType);
-        documentVersion.setSize(file.getSize());
-        documentVersion.setUploadDate(new Date());
-
-        //TODO:replace with real user
-        User user = userService.findById(1);
+        User user = userService.findById(userId);
+        Document document = documentService.findById(docId);
         documentVersion.setUser(user);
+        documentVersion.setDocument(document);
 
-        documentVersion.setNote(note);
-        documentVersion.setDocument(document_id);
-        documentVersion.setExtension(ext);
         String id = null;
         try {
             id = fileStorageService.uploadFile(documentVersion, file.getInputStream());

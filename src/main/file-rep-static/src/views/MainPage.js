@@ -23,7 +23,16 @@ import PublishIcon from '@material-ui/icons/Publish';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import FolderDialog from "../components/FolderDialog";
-import {getSectionsReq, getSectionTreeReq, createFolder, getFolderByIdReq, updateFolderReq} from "../api/api";
+import {
+    getSectionsReq,
+    getSectionTreeReq,
+    createFolder,
+    getFolderByIdReq,
+    updateFolderReq,
+    uploadNewVersionReq,
+    getDocumentReq,
+    downloadVersionLink
+} from "../api/api";
 import AddVersionDialog from "../components/AddVersionDialog";
 
 const styles = theme=>({
@@ -168,9 +177,12 @@ class MainPage extends React.Component{
     onSaveVersion = (version) => {
         const {selectedIndex} = this.state;
 
-        version.id = 1;
+        const docId = selectedIndex;
+        version.userId = 1;
         version.docId = selectedIndex;
-        console.log(version)
+        uploadNewVersionReq(docId, version)
+            .then(response=>console.log(response))
+            .catch(err=>console.log(err))
     }
 
     onViewClick = () => {
@@ -196,6 +208,26 @@ class MainPage extends React.Component{
                     })
                 }
             });
+        }else{
+            getDocumentReq(selectedIndex)
+                .then(document=>{
+                    if(document.folderId){
+                        getFolderByIdReq(document.folderId)
+                            .then(parentFolder=>{
+                                this.setState({
+                                    viewDocumentIsOpen: true,
+                                    selectedDocument: document,
+                                    selectedFolderName: parentFolder.title
+                                })
+                            })
+                    }else{
+                        this.setState({
+                            viewDocumentIsOpen: true,
+                            selectedDocument: document,
+                            selectedFolderName: "Корневая директория"
+                        })
+                    }
+                })
         }
     }
 
@@ -227,6 +259,21 @@ class MainPage extends React.Component{
 
     }
 
+    onDownloadVersionClick = () => {
+        const {selectedIndex} = this.state;
+
+        getDocumentReq(selectedIndex)
+            .then(documentObj=>{
+                let a = document.createElement('a');
+                a.style = 'display:none';
+                a.href = downloadVersionLink(documentObj.actualVersion.id);
+                a.download = `${documentObj.title}.${documentObj.actualVersion.extension}`;
+                document.body.appendChild(a);
+                a.click();
+            })
+
+    }
+
     renderSelectedElementMenu(){
         const {selectedIndex, selectedType} = this.state;
         const {classes} = this.props;
@@ -245,6 +292,7 @@ class MainPage extends React.Component{
                 aria-label="account of current user"
                 aria-haspopup="true"
                 color="primary"
+                onClick={this.onDownloadVersionClick}
             >
                 <CloudDownloadIcon  fontSize="large"/>
             </IconButton>)
@@ -332,6 +380,8 @@ class MainPage extends React.Component{
                 parentFolder={selectedFolderName}
                 documentObject={selectedDocument}
                 onSave={this.onSaveDocument}
+                downloadActualVersion={this.onDownloadVersionClick}
+                uploadNewVersion={this.openAddVersionDialog}
             />
             <FolderDialog
                 isOpen={folderDialogIsOpen}
