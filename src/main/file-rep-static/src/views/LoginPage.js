@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function LoginPage() {
+export default function LoginPage({passedAuth}) {
     const classes = useStyles();
 
     return (
@@ -41,7 +41,6 @@ export default function LoginPage() {
                 <Typography component="h1" variant="h5">
                     Вход в файловое хранилище
                 </Typography>
-                <form className={classes.form} noValidate>
                     <TextField
                         variant="outlined"
                         margin="normal"
@@ -69,10 +68,11 @@ export default function LoginPage() {
                         variant="contained"
                         color="primary"
                         className={classes.submit}
+                        onClick={passedAuth}
                     >
                         Войти
                     </Button>
-                </form>
+
             </div>
         </Container>
     );

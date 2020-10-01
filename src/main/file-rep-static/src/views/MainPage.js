@@ -31,7 +31,9 @@ import {
     updateFolderReq,
     uploadNewVersionReq,
     getDocumentReq,
-    downloadVersionLink
+    downloadVersionLink,
+    updateDocumentReq,
+    searchByTag, loadDocumentVersionsReq
 } from "../api/api";
 import AddVersionDialog from "../components/AddVersionDialog";
 
@@ -98,6 +100,7 @@ class MainPage extends React.Component{
     constructor(props) {
         super(props);
         this.state= {
+            searchQuery: '',
             addVersionDialogIsOpen: false,
             viewDocumentIsOpen: false,
             folderDialogIsOpen: false,
@@ -109,6 +112,7 @@ class MainPage extends React.Component{
             selectedFolderName: null,
             selectedFolder:null,
             selectedDocument: null,
+
 
         }
 
@@ -171,7 +175,13 @@ class MainPage extends React.Component{
     }
 
     onSaveDocument = (document)=>{
-        console.log(document)
+            updateDocumentReq(document)
+                .then(()=> {
+                    this.getSectionTree();
+                    this.setState({
+                        viewDocumentIsOpen: false
+                    });
+                })
     }
 
     onSaveVersion = (version) => {
@@ -258,6 +268,25 @@ class MainPage extends React.Component{
 
 
     }
+
+    handleSearchRun = (e) => {
+        if (e.key === 'Enter') {
+            const query = this.state.searchQuery;
+            if(query.length>0){
+                searchByTag(this.state.searchQuery)
+                    .then(result=>this.setState({sectionTree: result}))
+            }else{
+                this.getSectionTree();
+            }
+
+        }
+    }
+
+    loadDocumentVersions = () => {
+        const {selectedIndex} = this.state;
+        return loadDocumentVersionsReq(selectedIndex)
+    }
+
 
     onDownloadVersionClick = () => {
         const {selectedIndex} = this.state;
@@ -362,7 +391,7 @@ class MainPage extends React.Component{
 
 
     render (){
-        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, selectedFolderName, selectedFolder, selectedDocument, addVersionDialogIsOpen} = this.state;
+        const {viewDocumentIsOpen, folderDialogIsOpen, sections, selectedSection, sectionTree, selectedFolderName, selectedFolder, selectedDocument, addVersionDialogIsOpen, searchQuery} = this.state;
         const {classes} = this.props;
 
         console.log(selectedSection);
@@ -382,6 +411,7 @@ class MainPage extends React.Component{
                 onSave={this.onSaveDocument}
                 downloadActualVersion={this.onDownloadVersionClick}
                 uploadNewVersion={this.openAddVersionDialog}
+                loadVersions={this.loadDocumentVersions}
             />
             <FolderDialog
                 isOpen={folderDialogIsOpen}
@@ -408,6 +438,9 @@ class MainPage extends React.Component{
                                 input: classes.inputInput,
                             }}
                             inputProps={{ 'aria-label': 'search' }}
+                            value={searchQuery}
+                            onChange={e=>this.setState({searchQuery: e.target.value})}
+                            onKeyDown={this.handleSearchRun}
                         />
                     </div>
                     <IconButton

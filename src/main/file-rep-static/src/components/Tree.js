@@ -72,6 +72,14 @@ export default function Tree({tree, onSelect}) {
 
     }
 
+    const renderRunner = (tree) =>{
+        if(Array.isArray(tree)){
+            return tree.map(element=>renderTreeElement(element));
+        }else{
+            return renderTreeElement(tree);
+        }
+    }
+
 
     return (
         <TreeView
@@ -82,7 +90,7 @@ export default function Tree({tree, onSelect}) {
             selected={selected}
             onNodeSelect={handleSelect}
         >
-            {tree ? renderTreeElement(tree) : null}
+            {tree ? renderRunner(tree) : null}
             {/*<TreeItem nodeId="1" label={*/}
             {/*    <div className={classes.labelRoot}>*/}
             {/*        <Folder color="inherit" className={classes.labelIcon} />*/}

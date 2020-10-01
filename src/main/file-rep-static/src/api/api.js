@@ -34,6 +34,11 @@ export const getDocumentReq = async documentId => {
     return response.data;
 }
 
+export const updateDocumentReq = async document => {
+    let response = await server.put("/documents", document)
+    return response.data;
+}
+
 export const uploadNewVersionReq = async (docId, version) => {
     console.log(version);
     let formData = new FormData();
@@ -47,4 +52,14 @@ export const uploadNewVersionReq = async (docId, version) => {
 
 export const downloadVersionLink = async (versionId) => {
     return `http://127.0.0.1:8080/api/documents/version/${versionId}/content`
+}
+
+export const searchByTag = async tagTitle => {
+    let response = await server.get(`/documents/search/tag/${tagTitle}`)
+    return response.data;
+}
+
+export const loadDocumentVersionsReq = async index => {
+    let response = await server.get(`/documents/${index}/versions`)
+    return response.data;
 }

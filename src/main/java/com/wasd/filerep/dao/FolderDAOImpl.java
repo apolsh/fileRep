@@ -38,10 +38,22 @@ public class FolderDAOImpl implements FolderDAO {
 
     @Override
     public void save(Folder folder) {
-        Session session = entityManager.unwrap(Session.class);
-        Transaction txn = session.beginTransaction();
-        session.saveOrUpdate(folder);
-        txn.commit();
+
+        if(folder.getId() != 0){
+            Session session = entityManager.unwrap(Session.class);
+            Folder existingFolder = session.get(Folder.class, folder.getId());
+            existingFolder.setNote(folder.getNote());
+            existingFolder.setTitle(folder.getTitle());
+            Transaction txn = session.beginTransaction();
+            session.saveOrUpdate(existingFolder);
+            txn.commit();
+        }else{
+            Session session = entityManager.unwrap(Session.class);
+            Transaction txn = session.beginTransaction();
+            session.saveOrUpdate(folder);
+            txn.commit();
+        }
+
     }
 
     public void update(Folder folder){

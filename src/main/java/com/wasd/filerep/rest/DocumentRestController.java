@@ -2,11 +2,10 @@ package com.wasd.filerep.rest;
 
 import com.wasd.filerep.entity.Document;
 import com.wasd.filerep.entity.DocumentVersion;
+import com.wasd.filerep.entity.Tag;
 import com.wasd.filerep.entity.User;
-import com.wasd.filerep.service.DocumentService;
-import com.wasd.filerep.service.DocumentVersionService;
-import com.wasd.filerep.service.FileStorageService;
-import com.wasd.filerep.service.UserService;
+import com.wasd.filerep.service.*;
+import com.wasd.filerep.wrappers.rest.TreeItemWrapper;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,17 +16,19 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/documents")
+@RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DocumentRestController {
 
     private DocumentService documentService;
     private DocumentVersionService documentVersionService;
     private FileStorageService fileStorageService;
+    private TagService tagService;
 
     @Autowired
     UserService userService;
@@ -35,18 +36,20 @@ public class DocumentRestController {
     @Autowired
     public DocumentRestController(DocumentService documentService,
                                   DocumentVersionService documentVersionService,
-                                  FileStorageService fileStorageService) {
+                                  FileStorageService fileStorageService,
+                                  TagService tagService) {
         this.documentService = documentService;
         this.documentVersionService = documentVersionService;
         this.fileStorageService =fileStorageService;
+        this.tagService = tagService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/documents")
     public List<Document> findAll(){
         return documentService.findAll();
     }
 
-    @GetMapping("/{document_id}")
+    @GetMapping("/documents/{document_id}")
     public Document getDocument(@PathVariable int document_id){
         Document document = documentService.findById(document_id);
         if(document == null){
@@ -55,20 +58,32 @@ public class DocumentRestController {
         return document;
     }
 
-    @PostMapping("/")
+    @PostMapping("/documents")
     public Document addDocument(@RequestBody Document document){
         document.setId(0);
         documentService.save(document);
         return document;
     }
 
-    @PutMapping("/")
+    @PutMapping("/documents")
     public Document updateDocument(@RequestBody Document document){
+        List<Tag> tagList = document.getTags();
+        for(Tag tag : tagList){
+            if(tag.getId() == 0){
+                Tag existingTag = tagService.findByTitle(tag.getTitle());
+                if(existingTag==null){
+                    tagService.save(tag);
+                }else{
+                    tag.setId(existingTag.getId());
+                }
+
+            }
+        }
         documentService.save(document);
         return document;
     }
 
-    @DeleteMapping("/{document_id}")
+    @DeleteMapping("/documents/{document_id}")
     public String deleteDocument(@PathVariable int document_id){
         Document document = documentService.findById(document_id);
         if(document == null){
@@ -82,7 +97,7 @@ public class DocumentRestController {
     //======================VERSIONS=================================================
 
 
-    @GetMapping("/{document_id}/versions")
+    @GetMapping("/documents/{document_id}/versions")
     public List<DocumentVersion> getDocumentVersions(@PathVariable long document_id){
         Document document = documentService.findById(document_id);
         if(document == null){
@@ -91,7 +106,7 @@ public class DocumentRestController {
         return document.getVersions();
     }
 
-    @GetMapping("/versions/{version_id}")
+    @GetMapping("/documents/versions/{version_id}")
     public DocumentVersion getCurrentVersion(@PathVariable int version_id){
         DocumentVersion documentVersion = documentVersionService.findById(version_id);
         if(documentVersion == null){
@@ -100,7 +115,7 @@ public class DocumentRestController {
         return documentVersion;
     }
 
-    @PostMapping(path ="/{document_id}/version",
+    @PostMapping(path ="/documents/{document_id}/version",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public String addVersion(@RequestParam("file")MultipartFile file,
@@ -129,7 +144,7 @@ public class DocumentRestController {
         return id;
     }
 
-    @GetMapping("/version/{version_id}/content")
+    @GetMapping("/documents/version/{version_id}/content")
     public void downloadVersionContent(@PathVariable long version_id, HttpServletResponse response){
         DocumentVersion documentVersion = documentVersionService.findById(version_id);
         InputStream content = fileStorageService.downloadFile(documentVersion.getStorageId());
@@ -145,7 +160,7 @@ public class DocumentRestController {
 
     }
 
-    @DeleteMapping("/versions/{version_id}")
+    @DeleteMapping("/documents/versions/{version_id}")
     public String deleteCurrentVersion(@PathVariable int version_id){
         DocumentVersion documentVersion = documentVersionService.findById(version_id);
         if(documentVersion == null){
@@ -154,5 +169,21 @@ public class DocumentRestController {
         documentVersionService.deleteById(version_id);
         return "success";
     }
+
+    //=============================SEARCH==================================
+
+    @GetMapping("/documents/search/tag/{tag_title}")
+    public List<TreeItemWrapper> searchByTag(@PathVariable String tag_title){
+        Tag tag = tagService.findByTitle(tag_title);
+        List<Document> documents = tag.getDocuments();
+        List<TreeItemWrapper> treeItemWrappers = new ArrayList<>();
+        for(Document document : documents){
+            treeItemWrappers.add(new TreeItemWrapper(document));
+        }
+
+        return treeItemWrappers;
+    }
+
+
 
 }

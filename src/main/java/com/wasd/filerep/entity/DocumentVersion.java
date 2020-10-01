@@ -33,7 +33,6 @@ public class DocumentVersion {
     @JoinColumn(name = "doc_id")
     private Document document;
 
-    @JsonIgnore
     @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;

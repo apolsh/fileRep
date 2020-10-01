@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function DocumentDialog({isOpen, onClose, parentFolder, documentObject, onSave, downloadActualVersion, uploadNewVersion}) {
+export default function DocumentDialog({isOpen, onClose, parentFolder, documentObject, onSave, downloadActualVersion, uploadNewVersion, loadVersions}) {
 
     const classes = useStyles();
 
@@ -78,11 +78,15 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
     const [title, setTitle] = React.useState("");
     const [note, setNote] = React.useState("");
     const [tags, setTags] = React.useState([]);
+    const [versions, setVersions] = React.useState([]);
     const [tagInput, setTagInput] = React.useState("");
     const [tagInputIsOpen, setTagInputIsOpen] = React.useState(false);
 
     const handleTabChange = (event, newValue) => {
         setTabindex(newValue);
+        if(newValue===1){
+            loadVersions().then(result=>setVersions(result))
+        }
     };
 
 
@@ -95,10 +99,11 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
 
     }, [isOpen]);
 
-    const addTag = newTag => {
+    const addTag = newTagName => {
         const tempTags = [...tags];
-        tempTags.push(newTag)
+        tempTags.push({id: 0, title: newTagName})
         setTags(tempTags);
+        setTagInput("");
     }
 
     const removeTag = tagId => {
@@ -109,6 +114,108 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
 
     const renderTags = ()=>{
         return tags.map(tag=><Chip key={tag.id} label={tag.title} onDelete={()=>removeTag(tag.id)} color="default" />)
+    }
+
+    const prepareSave = ()=>{
+        documentObject.title = title;
+        documentObject.note = note;
+        documentObject.tags = tags;
+        onSave(documentObject);
+    }
+
+    const renderVersions = versions => {
+        return versions.map(version=><Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1a-content"
+                id="panel1a-header"
+            >
+                <div style={{width:'100%', display: 'block'}}>
+                    <Typography style={{display: 'inline-block'}}>{version.title ? version.title : `Версия от ${getDateTime(version.uploadDate)}`}</Typography>
+                    {version.id === documentObject ? <Chip
+                            style={{float:'right', backgroundColor:'purple', color: 'white'}}
+                            label="Актуальная"
+                            clickable
+                            color="primary"
+                            onDelete={console.log}
+                            deleteIcon={<DoneIcon />}
+                        />
+                    : null
+                    }
+                </div>
+
+            </AccordionSummary>
+            <AccordionDetails style={{display:'block'}}>
+                <hr/>
+                <div>
+                    <Typography variant="body1"  style={{display: 'inline-block'}} >
+                        <b>Описание:</b>
+                    </Typography>
+                    <Typography variant="body2">
+                        {version.note}
+                    </Typography>
+                </div>
+                <br/>
+                <div>
+                    <Typography variant="body1"  style={{display: 'inline-block'}} >
+                        <b>Загрузил:</b>
+                    </Typography>
+                    <Typography variant="body1">
+                        {`${version.user.firstName} ${version.user.secondName} ${version.user.patronymic ? version.user.patronymic : ''}`}
+                    </Typography>
+                </div>
+                <br/>
+                <div>
+                    <Typography variant="body1"  style={{display: 'inline-block'}} >
+                        <b>Дата загрузки:</b>
+                    </Typography>
+                    <Typography variant="body1">
+                        {version.uploadDate}
+                    </Typography>
+                </div>
+                <br/>
+                <div>
+                    <Typography variant="body1"  style={{display: 'inline-block'}} >
+                        <b>Тип файла:</b>
+                    </Typography>
+                    <Typography variant="body1">
+                        {version.mimeType}
+                    </Typography>
+                </div>
+                <br/>
+                <div>
+                    <Typography variant="body1"  style={{display: 'inline-block'}} >
+                        <b>Размер файла:</b>
+                    </Typography>
+                    <Typography variant="body1">
+                        {`${version.size} byte`}
+                    </Typography>
+                </div>
+                <hr/>
+                <div>
+                    <Grid container justify="center" spacing={4}>
+                        <Grid key={1} item>
+                            <Button variant="contained" color="secondary">
+                                Удалить
+                            </Button>
+                        </Grid>
+                        <Grid key={2} item>
+                            <Button variant="contained" style={{backgroundColor:'purple', color: 'white'}}>
+                                Актуальная версия
+                            </Button>
+                        </Grid>
+                        <Grid key={3} item>
+                            <Button variant="contained" color="primary">
+                                Скачать
+                            </Button>
+                        </Grid>
+                    </Grid>
+
+
+                </div>
+
+            </AccordionDetails>
+        </Accordion>)
     }
 
     return (
@@ -176,7 +283,10 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                                         aria-label="account of current user"
                                         aria-haspopup="true"
                                         color="inherit"
-                                        onClick={()=>setTagInputIsOpen(false)}
+                                        onClick={()=> {
+                                            addTag(tagInput);
+                                            setTagInputIsOpen(false);
+                                        }}
                                     >
                                         <CheckIcon color='primary'/>
                                     </IconButton>
@@ -231,177 +341,179 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                     </TabPanel>
                     <TabPanel value={tabIndex} index={1}>
                         <div className={classes.versionsRoot}>
-                            <Accordion>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1a-content"
-                                    id="panel1a-header"
-                                >
-                                    <div style={{width:'100%', display: 'block'}}>
-                                        <Typography style={{display: 'inline-block'}}>Версия от {getDateTime(new Date())}</Typography>
-                                        <Chip
-                                            style={{float:'right', backgroundColor:'purple', color: 'white'}}
-                                            label="Актуальная"
-                                            clickable
-                                            color="primary"
-                                            onDelete={console.log}
-                                            deleteIcon={<DoneIcon />}
-                                        />
-                                    </div>
+                            {renderVersions(versions)}
+                            {/*<Accordion>*/}
+                            {/*    <AccordionSummary*/}
+                            {/*        expandIcon={<ExpandMoreIcon />}*/}
+                            {/*        aria-controls="panel1a-content"*/}
+                            {/*        id="panel1a-header"*/}
+                            {/*    >*/}
+                            {/*        <div style={{width:'100%', display: 'block'}}>*/}
+                            {/*            <Typography style={{display: 'inline-block'}}>Версия от {getDateTime(new Date())}</Typography>*/}
+                            {/*            <Chip*/}
+                            {/*                style={{float:'right', backgroundColor:'purple', color: 'white'}}*/}
+                            {/*                label="Актуальная"*/}
+                            {/*                clickable*/}
+                            {/*                color="primary"*/}
+                            {/*                onDelete={console.log}*/}
+                            {/*                deleteIcon={<DoneIcon />}*/}
+                            {/*            />*/}
+                            {/*        </div>*/}
 
-                                </AccordionSummary>
-                                <AccordionDetails style={{display:'block'}}>
-                                    <hr/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Описание:</b>
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,
-                                            sit amet blandit leo lobortis eget.
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Загрузил:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            Иванов Иван Иванович (ivanov@mail.ru)
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Дата загрузки:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            {getDateTime(new Date())}
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Тип файла:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            application/xml
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Размер файла:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            123кб
-                                        </Typography>
-                                    </div>
-                                    <hr/>
-                                    <div>
-                                        <Grid container justify="center" spacing={4}>
-                                            <Grid key={1} item>
-                                                <Button variant="contained" color="secondary">
-                                                    Удалить
-                                                </Button>
-                                            </Grid>
-                                            <Grid key={2} item>
-                                                <Button variant="contained" style={{backgroundColor:'purple', color: 'white'}}>
-                                                    Актуальная версия
-                                                </Button>
-                                            </Grid>
-                                            <Grid key={3} item>
-                                                <Button variant="contained" color="primary">
-                                                    Скачать
-                                                </Button>
-                                            </Grid>
-                                        </Grid>
-
-
-                                    </div>
-
-                                </AccordionDetails>
-                            </Accordion>
-                            <Accordion>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    aria-controls="panel1a-content"
-                                    id="panel1a-header"
-                                >
-                                    <Typography >Версия от {getDateTime(new Date())}</Typography>
-                                </AccordionSummary>
-                                <AccordionDetails style={{display:'block'}}>
-                                    <hr/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Описание:</b>
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,
-                                            sit amet blandit leo lobortis eget.
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Загрузил:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            Иванов Иван Иванович (ivanov@mail.ru)
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Дата загрузки:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            {getDateTime(new Date())}
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Тип файла:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            application/xml
-                                        </Typography>
-                                    </div>
-                                    <br/>
-                                    <div>
-                                        <Typography variant="body1"  style={{display: 'inline-block'}} >
-                                            <b>Размер файла:</b>
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            123кб
-                                        </Typography>
-                                    </div>
-                                    <hr/>
-                                    <div>
-                                        <Grid container justify="center" spacing={4}>
-                                            <Grid key={1} item>
-                                                <Button variant="contained" color="secondary">
-                                                    Удалить
-                                                </Button>
-                                            </Grid>
-                                            <Grid key={2} item>
-                                                <Button variant="contained" style={{backgroundColor:'purple', color: 'white'}}>
-                                                    Актуальная версия
-                                                </Button>
-                                            </Grid>
-                                            <Grid key={3} item>
-                                                <Button variant="contained" color="primary">
-                                                    Скачать
-                                                </Button>
-                                            </Grid>
-                                        </Grid>
+                            {/*    </AccordionSummary>*/}
+                            {/*    <AccordionDetails style={{display:'block'}}>*/}
+                            {/*        <hr/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Описание:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body2">*/}
+                            {/*                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,*/}
+                            {/*                sit amet blandit leo lobortis eget.*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Загрузил:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                Иванов Иван Иванович (ivanov@mail.ru)*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Дата загрузки:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                {getDateTime(new Date())}*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Тип файла:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                application/xml*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Размер файла:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                123кб*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <hr/>*/}
+                            {/*        <div>*/}
+                            {/*            <Grid container justify="center" spacing={4}>*/}
+                            {/*                <Grid key={1} item>*/}
+                            {/*                    <Button variant="contained" color="secondary">*/}
+                            {/*                        Удалить*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*                <Grid key={2} item>*/}
+                            {/*                    <Button variant="contained" style={{backgroundColor:'purple', color: 'white'}}>*/}
+                            {/*                        Актуальная версия*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*                <Grid key={3} item>*/}
+                            {/*                    <Button variant="contained" color="primary">*/}
+                            {/*                        Скачать*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*            </Grid>*/}
 
 
-                                    </div>
+                            {/*        </div>*/}
 
-                                </AccordionDetails>
-                            </Accordion>
+                            {/*    </AccordionDetails>*/}
+                            {/*</Accordion>*/}
+                            {/*<Accordion>*/}
+                            {/*    <AccordionSummary*/}
+                            {/*        expandIcon={<ExpandMoreIcon />}*/}
+                            {/*        aria-controls="panel1a-content"*/}
+                            {/*        id="panel1a-header"*/}
+                            {/*    >*/}
+                            {/*        <Typography >Версия от {getDateTime(new Date())}</Typography>*/}
+                            {/*    </AccordionSummary>*/}
+                            {/*    <AccordionDetails style={{display:'block'}}>*/}
+                            {/*        <hr/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Описание:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body2">*/}
+                            {/*                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,*/}
+                            {/*                sit amet blandit leo lobortis eget.*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Загрузил:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                Иванов Иван Иванович (ivanov@mail.ru)*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Дата загрузки:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                {getDateTime(new Date())}*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Тип файла:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                application/xml*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <br/>*/}
+                            {/*        <div>*/}
+                            {/*            <Typography variant="body1"  style={{display: 'inline-block'}} >*/}
+                            {/*                <b>Размер файла:</b>*/}
+                            {/*            </Typography>*/}
+                            {/*            <Typography variant="body1">*/}
+                            {/*                123кб*/}
+                            {/*            </Typography>*/}
+                            {/*        </div>*/}
+                            {/*        <hr/>*/}
+                            {/*        <div>*/}
+                            {/*            <Grid container justify="center" spacing={4}>*/}
+                            {/*                <Grid key={1} item>*/}
+                            {/*                    <Button variant="contained" color="secondary">*/}
+                            {/*                        Удалить*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*                <Grid key={2} item>*/}
+                            {/*                    <Button variant="contained" style={{backgroundColor:'purple', color: 'white'}}>*/}
+                            {/*                        Актуальная версия*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*                <Grid key={3} item>*/}
+                            {/*                    <Button variant="contained" color="primary">*/}
+                            {/*                        Скачать*/}
+                            {/*                    </Button>*/}
+                            {/*                </Grid>*/}
+                            {/*            </Grid>*/}
+
+
+                            {/*        </div>*/}
+
+                            {/*    </AccordionDetails>*/}
+                            {/*</Accordion>*/}
+
                         </div>
 
                     </TabPanel>
@@ -412,7 +524,7 @@ export default function DocumentDialog({isOpen, onClose, parentFolder, documentO
                     <Button onClick={onClose} color="secondary">
                         Отмена
                     </Button>
-                    <Button onClick={console.log} color="primary">
+                    <Button onClick={prepareSave} color="primary">
                         Сохранить
                     </Button>
                 </DialogActions>

@@ -1,6 +1,9 @@
 package com.wasd.filerep.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "tags")
@@ -13,6 +16,15 @@ public class Tag {
 
     @Column(name="title")
     private String title;
+
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+            name = "document_tags",
+            joinColumns = @JoinColumn(name = "tag_id"),
+            inverseJoinColumns = @JoinColumn(name = "doc_id")
+    )
+    List<Document> documents;
 
     public Tag() {
     }
@@ -31,5 +43,13 @@ public class Tag {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public List<Document> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<Document> documents) {
+        this.documents = documents;
     }
 }

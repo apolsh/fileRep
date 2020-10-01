@@ -38,9 +38,21 @@ public class DocumentDAOImpl implements DocumentDAO {
     @Override
     public void save(Document document) {
         Session session = entityManager.unwrap(Session.class);
-        Transaction txn = session.beginTransaction();
-        session.saveOrUpdate(document);
-        txn.commit();
+
+        if(document.getId() != 0){
+            Transaction txn = session.beginTransaction();
+            Document existingDocument = session.get(Document.class, document.getId());
+            existingDocument.setActualVersion(document.getActualVersion());
+            existingDocument.setNote(document.getNote());
+            existingDocument.setTags(document.getTags());
+            existingDocument.setTitle(document.getTitle());
+            session.saveOrUpdate(existingDocument);
+            txn.commit();
+        }else{
+            session.saveOrUpdate(document);
+        }
+
+
 
 
 //        if(document.getId() != 0 && document.getVersions() == null){
